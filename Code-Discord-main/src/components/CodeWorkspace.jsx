@@ -92,7 +92,7 @@
 //   );
 // }
 
-import React from "react";
+import React, { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { useNavigate } from "react-router-dom";
 
@@ -109,6 +109,14 @@ export default function CodeWorkspace({
   handleSaveCode,
   isSaving
 }) {
+  const [activeTab, setActiveTab] = useState("output");
+  const [stdinInput, setStdinInput] = useState("");
+
+  const onRunClick = () => {
+    setActiveTab("output");
+    handleRunCode(stdinInput);
+  };
+
   // Match the editor background to the rest of the page
   const handleBeforeMount = (monaco) => {
     monaco.editor.defineTheme("devcord", {
@@ -158,7 +166,7 @@ export default function CodeWorkspace({
           )}
 
           <button
-            onClick={handleRunCode}
+            onClick={onRunClick}
             disabled={isCompiling}
             className={`${
               isCompiling ? "bg-[#E8A33D]/50" : "bg-[#E8A33D] hover:bg-[#f0b25c]"
@@ -190,15 +198,55 @@ export default function CodeWorkspace({
         />
       </div>
 
-      {/* Terminal Area */}
-      <div className="h-[28%] bg-[#0F1014] flex flex-col border-t border-white/10">
-        <div className="flex items-center justify-center bg-[#1C1E26] border-b border-white/10 px-4 py-1.5">
-          <span className="text-xs font-['JetBrains_Mono'] text-white/40 uppercase tracking-widest">
-            Terminal...
+      {/* Terminal & Input Area */}
+      <div className="h-[32%] bg-[#0F1014] flex flex-col border-t border-white/10">
+        <div className="flex items-center justify-between bg-[#1C1E26] border-b border-white/10 px-4 py-1.5">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("output")}
+              className={`text-xs font-['JetBrains_Mono'] uppercase tracking-wider px-2.5 py-1 rounded transition-colors ${
+                activeTab === "output"
+                  ? "bg-white/10 text-[#E8A33D] font-semibold"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              Output
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("input")}
+              className={`text-xs font-['JetBrains_Mono'] uppercase tracking-wider px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+                activeTab === "input"
+                  ? "bg-white/10 text-[#E8A33D] font-semibold"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              Input (stdin)
+              {stdinInput.trim().length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4FD1C5]" title="Input provided" />
+              )}
+            </button>
+          </div>
+          <span className="text-[11px] font-['JetBrains_Mono'] text-white/30 hidden sm:inline">
+            {activeTab === "input" ? "Custom program input" : "Terminal output"}
           </span>
         </div>
-        <div className="flex-grow p-4 font-['JetBrains_Mono'] text-sm text-[#D6D8E0] overflow-y-auto whitespace-pre-wrap">
-          {terminalOutput}
+
+        <div className="flex-grow overflow-hidden relative">
+          {activeTab === "output" ? (
+            <div className="h-full p-4 font-['JetBrains_Mono'] text-sm text-[#D6D8E0] overflow-y-auto whitespace-pre-wrap">
+              {terminalOutput}
+            </div>
+          ) : (
+            <textarea
+              value={stdinInput}
+              onChange={(e) => setStdinInput(e.target.value)}
+              placeholder="Enter input for your program here (e.g. for Scanner, cin >>, or input())..."
+              className="w-full h-full p-4 font-['JetBrains_Mono'] text-sm text-[#D6D8E0] bg-transparent resize-none outline-none placeholder:text-white/20"
+              spellCheck={false}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -66,17 +66,18 @@ export default function JoinRoom() {
     }
   };
 
-  const handleRunCode = async () => {
+  const handleRunCode = async (stdin = "") => {
     if (!editorRef.current) return;
     const currentCode = editorRef.current.getValue();
     setIsCompiling(true);
     setTerminalOutput(`$ Running ${language}...\n> Please wait...`);
 
     try {
-      const response = await fetch("https://compiler-service-qahj.onrender.com/execute", {
+      const compilerUrl = import.meta.env.VITE_COMPILER_URL || "http://localhost:8080/execute";
+      const response = await fetch(compilerUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, code: currentCode }),
+        body: JSON.stringify({ language, code: currentCode, stdin: typeof stdin === "string" ? stdin : "" }),
       });
       const result = await response.json();
       let formattedOutput = "";
